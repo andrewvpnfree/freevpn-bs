@@ -1,7 +1,9 @@
 import requests
+import re
+import os
 
-def fetch_and_sort():
-    # Прямые ссылки на гигантские текстовые списки, которые никогда не банят запросы от GitHub
+def fetch_and_save():
+    # Проверенные и стабильные открытые базы со свежими ключами
     sources = [
         "https://githubusercontent.com",
         "https://githubusercontent.com",
@@ -10,42 +12,36 @@ def fetch_and_sort():
     ]
     
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    
-    vless_list = []
-    vmess_list = []
-    trojan_list = []
-    ss_list = []
+    all_text = ""
     
     for url in sources:
         try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                lines = response.text.splitlines()
-                for line in lines:
-                    line = line.strip()
-                    # Раскидываем ключи по протоколам без жестких ограничений
-                    if "vless://" in line and line not in vless_list:
-                        vless_list.append(line)
-                    elif "vmess://" in line and line not in vmess_list:
-                        vmess_list.append(line)
-                    elif "trojan://" in line and line not in trojan_list:
-                        trojan_list.append(line)
-                    elif ("ss://" in line or "shadowsocks://" in line) and line not in ss_list:
-                        ss_list.append(line)
+            res = requests.get(url, headers=headers, timeout=15)
+            if res.status_code == 200:
+                all_text += res.text + "\n"
         except Exception as e:
             print(f"Ошибка источника {url}: {e}")
-
-    # Запись в отдельные файлы
-    with open("vless.txt", "w", encoding="utf-8") as f: f.write("\n".join(vless_list[:150]))
-    with open("vmess.txt", "w", encoding="utf-8") as f: f.write("\n".join(vmess_list[:100]))
-    with open("trojan.txt", "w", encoding="utf-8") as f: f.write("\n".join(trojan_list[:100]))
-    with open("shadowsocks.txt", "w", encoding="utf-8") as f: f.write("\n".join(ss_list[:100]))
+            
+    # Убираем Windows-переносы строк
+    all_text = all_text.replace('\r', '')
+    
+    # Ищем и сортируем протоколы
+    vless = list(set(re.findall(r'(vless://[^\s]+)', all_text)))
+    vmess = list(set(re.findall(r'(vmess://[^\s]+)', all_text)))
+    trojan = list(set(re.findall(r'(trojan://[^\s]+)', all_text)))
+    ss = list(set(re.findall(r'((?:ss|shadowsocks)://[^\s]+)', all_text)))
+    
+    # Жестко записываем данные прямо в файлы репозитория
+    with open("vless.txt", "w", encoding="utf-8") as f: f.write("\n".join(vless[:150]))
+    with open("vmess.txt", "w", encoding="utf-8") as f: f.write("\n".join(vmess[:100]))
+    with open("trojan.txt", "w", encoding="utf-8") as f: f.write("\n".join(trojan[:100]))
+    with open("shadowsocks.txt", "w", encoding="utf-8") as f: f.write("\n".join(ss[:100]))
     
     # Общий микс
-    all_configs = vless_list[:100] + vmess_list[:50] + trojan_list[:50] + ss_list[:50]
-    with open("whitelist_subscription.txt", "w", encoding="utf-8") as f: f.write("\n".join(all_configs))
+    mix = vless[:100] + vmess[:50] + trojan[:50] + ss[:50]
+    with open("whitelist_subscription.txt", "w", encoding="utf-8") as f: f.write("\n".join(mix))
     
-    print(f"Сортировка завершена! Найдено VLESS: {len(vless_list)}")
+    print("Все файлы успешно заполнены скриптом!")
 
 if __name__ == "__main__":
-    fetch_and_sort()
+    fetch_and_save()
