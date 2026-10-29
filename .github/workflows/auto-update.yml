@@ -2,33 +2,26 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Запуск ровно каждые 5 часов
-  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой
+    - cron: '0 */5 * * *' # Каждые 5 часов
+  workflow_dispatch: # Кнопка ручного запуска
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Дает роботу права обновлять файлы в вашем репозитории
+      contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+    - name: Прямое скачивание свежих VLESS конфигураций
+      run: |
+        curl -sL "https://githubusercontent.com" > whitelist_subscription.txt
 
-    - name: Install dependencies
-      run: pip install requests
-
-    - name: Run parser script
-      run: python update_bypass.py
-
-    - name: Commit and Push changes
+    - name: Сохранение изменений в репозиторий
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add whitelist_subscription.txt
-        git commit -m "Автообновление подписки белых списков" || echo "Нет изменений"
+        git commit -m "Финальное автообновление подписки белых списков" || echo "Нет изменений"
         git push
