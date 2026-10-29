@@ -9,16 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pages: write
-      id-token: write
+      contents: write # Жесткое требование прав на запись
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true # Позволяет использовать токен для git push
 
-    - name: Сбор и подготовка файлов подписок
+    - name: Сбор и жесткая запись по файлам
       run: |
-        mkdir public
         echo "" > temp_raw.txt
 
         # Скачиваем мировые базы данных прокси
@@ -30,19 +29,19 @@ jobs:
         # Очищаем скрытые символы переноса строк Windows
         tr -d '\r' < temp_raw.txt > temp_all.txt
 
-        # Раскладываем ключи по файлам в папку публикации
-        grep 'vless://' temp_all.txt | sort -u > public/vless.txt || echo "" > public/vless.txt
-        grep 'vmess://' temp_all.txt | sort -u > public/vmess.txt || echo "" > public/vmess.txt
-        grep 'trojan://' temp_all.txt | sort -u > public/trojan.txt || echo "" > public/trojan.txt
-        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u > public/shadowsocks.txt || echo "" > public/shadowsocks.txt
-        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > public/whitelist_subscription.txt
+        # Записываем напрямую в файлы репозитория
+        grep 'vless://' temp_all.txt | sort -u | head -n 150 > vless.txt || echo "" > vless.txt
+        grep 'vmess://' temp_all.txt | sort -u | head -n 100 > vmess.txt || echo "" > vmess.txt
+        grep 'trojan://' temp_all.txt | sort -u | head -n 100 > trojan.txt || echo "" > trojan.txt
+        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u | head -n 100 > shadowsocks.txt || echo "" > shadowsocks.txt
+        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u | head -n 150 > whitelist_subscription.txt
 
         rm temp_raw.txt temp_all.txt
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './public'
-
-    - name: Deploy to GitHub Pages
-      uses: actions/deploy-pages@v4
+    - name: Принудительный Push в репозиторий
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Action"
+        git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
+        git commit -m "Финальное обновление файлов в репозитории" || echo "Нет изменений"
+        git push origin main
