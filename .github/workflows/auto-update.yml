@@ -14,31 +14,61 @@ jobs:
     - name: Шаг 1. Проверка вашего репозитория
       uses: actions/checkout@v4
 
-    - name: Шаг 2. Внутреннее скачивание базы прокси
+    - name: База 1 (Основная для Белых Списков)
       uses: actions/checkout@v4
       with:
-        repository: 'zieng2/wl' # Качаем напрямую из репозитория GitHub без curl
-        path: 'source_repo'
+        repository: 'zieng2/wl'
+        path: 'repo1'
 
-    - name: Шаг 3. Сортировка и запись ключей в файлы
+    - name: База 2 (Мировой агрегатор)
+      uses: actions/checkout@v4
+      with:
+        repository: 'tbbatbb/Proxy'
+        path: 'repo2'
+
+    - name: База 3 (Обновления 24/7)
+      uses: actions/checkout@v4
+      with:
+        repository: 'stayorgo/vless'
+        path: 'repo3'
+
+    - name: База 4 (Cloudflare обходы)
+      uses: actions/checkout@v4
+      with:
+        repository: 'erfanmhd/v2ray-cloudflare-vpn'
+        path: 'repo4'
+
+    - name: База 5 (Большой микс)
+      uses: actions/checkout@v4
+      with:
+        repository: 'v2rayposhtiban/V2rayX'
+        path: 'repo5'
+
+    - name: Шаг 3. Объединение и жесткая сортировка тысяч ключей
       run: |
-        # Переносим данные из скачанного репозитория в ваш файл
-        cat source_repo/vless_universal.txt > raw_all.txt
+        # Собираем всё в один большой кучу-файл
+        cat repo1/vless_universal.txt >> raw_all.txt || true
+        cat repo2/vless.txt >> raw_all.txt || true
+        cat repo3/vless.txt >> raw_all.txt || true
+        cat repo4/vless.txt >> raw_all.txt || true
+        cat repo5/v2ray >> raw_all.txt || true
 
-        # Раскидываем ключи напрямую в файлы вашего репозитория
-        grep 'vless://' raw_all.txt | sort -u | head -n 150 > vless.txt || echo "" > vless.txt
-        grep 'vmess://' raw_all.txt | sort -u | head -n 100 > vmess.txt || echo "" > vmess.txt
-        grep 'trojan://' raw_all.txt | sort -u | head -n 100 > trojan.txt || echo "" > trojan.txt
-        grep -E '(shadowsocks|ss)://' raw_all.txt | sort -u | head -n 100 > shadowsocks.txt || echo "" > shadowsocks.txt
-        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' raw_all.txt | sort -u | head -n 150 > whitelist_subscription.txt
+        # Очищаем от мусора и раскидываем по файлам (лимит увеличен до 1000 строк!)
+        grep 'vless://' raw_all.txt | sort -u | head -n 1000 > vless.txt || echo "" > vless.txt
+        grep 'vmess://' raw_all.txt | sort -u | head -n 500 > vmess.txt || echo "" > vmess.txt
+        grep 'trojan://' raw_all.txt | sort -u | head -n 500 > trojan.txt || echo "" > trojan.txt
+        grep -E '(shadowsocks|ss)://' raw_all.txt | sort -u | head -n 500 > shadowsocks.txt || echo "" > shadowsocks.txt
+        
+        # Общая супер-подписка (микс всего)
+        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' raw_all.txt | sort -u | head -n 2000 > whitelist_subscription.txt
 
-        # Чистим временные папки
-        rm -rf source_repo raw_all.txt
+        # Удаляем мусорные временные папки
+        rm -rf repo1 repo2 repo3 repo4 repo5 raw_all.txt
 
     - name: Шаг 4. Принудительное сохранение файлов
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Автообновление файлов внутренней сети" || echo "Нет изменений"
+        git commit -m "Максимальный сбор тысяч ключей из 5 баз" || echo "Нет изменений"
         git push origin main
