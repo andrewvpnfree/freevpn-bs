@@ -2,46 +2,35 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Каждые 5 часов
-  workflow_dispatch: # Кнопка ручного запуска
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Жесткое требование прав на запись
+      contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        persist-credentials: true # Позволяет использовать токен для git push
+        persist-credentials: true
 
-    - name: Сбор и жесткая запись по файлам
-      run: |
-        echo "" > temp_raw.txt
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-        # Скачиваем мировые базы данных прокси
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+    - name: Install dependencies
+      run: pip install requests
 
-        # Очищаем скрытые символы переноса строк Windows
-        tr -d '\r' < temp_raw.txt > temp_all.txt
-
-        # Записываем напрямую в файлы репозитория
-        grep 'vless://' temp_all.txt | sort -u | head -n 150 > vless.txt || echo "" > vless.txt
-        grep 'vmess://' temp_all.txt | sort -u | head -n 100 > vmess.txt || echo "" > vmess.txt
-        grep 'trojan://' temp_all.txt | sort -u | head -n 100 > trojan.txt || echo "" > trojan.txt
-        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u | head -n 100 > shadowsocks.txt || echo "" > shadowsocks.txt
-        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u | head -n 150 > whitelist_subscription.txt
-
-        rm temp_raw.txt temp_all.txt
+    - name: Run python sorter
+      run: python update_bypass.py
 
     - name: Принудительный Push в репозиторий
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Финальное обновление файлов в репозитории" || echo "Нет изменений"
+        git commit -m "Финальное обновление файлов скриптом" || echo "Нет изменений"
         git push origin main
