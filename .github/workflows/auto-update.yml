@@ -14,10 +14,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Сбор баз напрямую без питона
+    - name: Сбор баз через зеркало-обходчик
       run: |
-        # Скачиваем огромный рабочий текстовый архив
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" > raw_all.txt
+        # Скачиваем через специальный шлюз, который не банит GitHub
+        curl -sSL -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" "https://banyun.uk" > raw_all.txt
 
         # Раскидываем ключи напрямую в файлы репозитория
         grep 'vless://' raw_all.txt | sort -u | head -n 150 > vless.txt || echo "" > vless.txt
