@@ -2,7 +2,7 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Каждые 5 часов
+    - cron: '0 */5 * * *' # Автозапуск каждые 5 часов
   workflow_dispatch: # Кнопка ручного запуска
 
 jobs:
@@ -14,14 +14,33 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Прямое скачивание свежих VLESS конфигураций
+    - name: Сбор тысяч ключей из всех мировых баз
       run: |
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt" > whitelist_subscription.txt
+        # Создаем пустой временный файл
+        echo "" > temp_all.txt
+
+        # 1. База VLESS для обхода белых списков
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        
+        # 2. Огромный микс-агрегатор (VLESS, VMess, Trojan, Shadowsocks)
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        
+        # 3. Мировые базы прокси от разработчиков обходов
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+
+        # Очищаем список: убираем пустые строки, оставляем только протоколы обхода и удаляем дубликаты
+        grep -E '^(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > whitelist_subscription.txt
+        
+        # Удаляем временный файл
+        rm temp_all.txt
 
     - name: Сохранение изменений в репозиторий
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add whitelist_subscription.txt
-        git commit -m "Финальное автообновление подписки белых списков" || echo "Нет изменений"
+        git commit -m "Сбор сотен уникальных ключей и подписок" || echo "Нет изменений"
         git push
