@@ -11,41 +11,21 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Шаг 1. Проверка вашего репозитория
+    - name: Шаг 1. Проверка репозитория
       uses: actions/checkout@v4
 
-    - name: Шаг 2. Скачивание тысяч ключей со всех живых зеркал
-      run: |
-        echo "" > temp_all.txt
+    - name: Шаг 2. Настройка Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-        # Скачиваем огромные проверенные базы (флаг -f заставляет пропускать мертвые ссылки)
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -f -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+    - name: Шаг 3. Запуск умного парсера
+      run: python update_bypass.py
 
-        # Очищаем от мусора и скрытых символов Windows
-        tr -d '\r' < temp_all.txt > temp_clean.txt
-
-        # Раскладываем ключи по файлам (лимит увеличен до 1500 строк!)
-        grep 'vless://' temp_clean.txt | sort -u | head -n 1500 > vless.txt || echo "" > vless.txt
-        grep 'vmess://' temp_clean.txt | sort -u | head -n 1000 > vmess.txt || echo "" > vmess.txt
-        grep 'trojan://' temp_clean.txt | sort -u | head -n 1000 > trojan.txt || echo "" > trojan.txt
-        grep -E '(shadowsocks|ss)://' temp_clean.txt | sort -u | head -n 1000 > shadowsocks.txt || echo "" > shadowsocks.txt
-        
-        # Общий мега-микс всего
-        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_clean.txt | sort -u | head -n 3000 > whitelist_subscription.txt
-
-        # Удаляем временные файлы
-        rm temp_all.txt temp_clean.txt
-
-    - name: Шаг 3. Принудительное сохранение файлов
+    - name: Шаг 4. Сохранение результатов в файлы
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Сбор тысяч ключей со всех доступных источников" || echo "Нет изменений"
+        git commit -m "Автообновление через умный Python маскировщик" || echo "Нет изменений"
         git push origin main
