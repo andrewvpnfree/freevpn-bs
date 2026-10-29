@@ -1,63 +1,55 @@
-import urllib.request
 import re
 import os
 
-def fetch_and_sort():
+def fetch_igareck_configs():
     all_content = ""
+    vless_list = []
+    vmess_list = []
+    trojan_list = []
+    ss_list = []
     
-    # 1. Сначала читаем локальную базу VLESS, которую робот скачал без интернета
-    local_file = "source_repo/vless_universal.txt"
-    if os.path.exists(local_file):
+    # 1. Читаем файлы из скачанного репозитория igareck
+    igareck_path = "igareck_repo"
+    if os.path.exists(igareck_path):
+        for root, dirs, files in os.walk(igareck_path):
+            for file in files:
+                # Нас интересуют только текстовые файлы конфигураций
+                if file.endswith(".txt"):
+                    try:
+                        with open(os.path.join(root, file), "r", encoding="utf-8", errors="ignore") as f:
+                            all_content += f.read() + "\n"
+                    except Exception:
+                        pass
+
+    # 2. Читаем файлы из нашей старой базы zieng2 (для максимального количества VLESS)
+    zieng_file = "zieng_repo/vless_universal.txt"
+    if os.path.exists(zieng_file):
         try:
-            with open(local_file, "r", encoding="utf-8", errors="ignore") as f:
+            with open(zieng_file, "r", encoding="utf-8", errors="ignore") as f:
                 all_content += f.read() + "\n"
-        except Exception as e:
-            print(f"Ошибка чтения локального файла: {e}")
+        except Exception:
+            pass
 
-    # 2. Список крупнейших интернет-баз (если какая-то забанит или удалится - скрипт НЕ упадет)
-    web_sources = [
-        "https://githubusercontent.com",
-        "https://githubusercontent.com",
-        "https://githubusercontent.com",
-        "https://githubusercontent.com",
-        "https://githubusercontent.com"
-    ]
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    
-    for url in web_sources:
-        try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as response:
-                html = response.read().decode('utf-8', errors='ignore')
-                all_content += html + "\n"
-                print(f"Успешно скачан источник: {url}")
-        except Exception as e:
-            # Если сайт выдал 404 или заблокировал - просто пишем в лог и идем дальше!
-            print(f"Источник {url} недоступен (пропущен): {e}")
-
-    # Очищаем скрытые символы Windows
+    # Очищаем от Windows переносов строк
     all_content = all_content.replace('\r', '')
     
-    # Строго распределяем ключи по их протоколам без дублирования
-    vless = list(set(re.findall(r'(vless://[^\s]+)', all_content)))
-    vmess = list(set(re.findall(r'(vmess://[^\s]+)', all_content)))
-    trojan = list(set(re.findall(r'(trojan://[^\s]+)', all_content)))
-    ss = list(set(re.findall(r'((?:ss|shadowsocks)://[^\s]+)', all_content)))
+    # Строго раскидываем ключи по протоколам без дубликатов
+    vless_list = list(set(re.findall(r'(vless://[^\s]+)', all_content)))
+    vmess_list = list(set(re.findall(r'(vmess://[^\s]+)', all_content)))
+    trojan_list = list(set(re.findall(r'(trojan://[^\s]+)', all_content)))
+    ss_list = list(set(re.findall(r'((?:ss|shadowsocks)://[^\s]+)', all_content)))
     
-    # Записываем уникальные протоколы в свои файлы
-    with open("vless.txt", "w", encoding="utf-8") as f: f.write("\n".join(vless[:500]))
-    with open("vmess.txt", "w", encoding="utf-8") as f: f.write("\n".join(vmess[:300]))
-    with open("trojan.txt", "w", encoding="utf-8") as f: f.write("\n".join(trojan[:300]))
-    with open("shadowsocks.txt", "w", encoding="utf-8") as f: f.write("\n".join(ss[:300]))
+    # Сохраняем строго разделенные файлы подписок в ваш репозиторий
+    with open("vless.txt", "w", encoding="utf-8") as f: f.write("\n".join(vless_list[:300]))
+    with open("vmess.txt", "w", encoding="utf-8") as f: f.write("\n".join(vmess_list[:150]))
+    with open("trojan.txt", "w", encoding="utf-8") as f: f.write("\n".join(trojan_list[:150]))
+    with open("shadowsocks.txt", "w", encoding="utf-8") as f: f.write("\n".join(ss_list[:150]))
     
-    # Общий мега-микс всего
-    mix = vless[:300] + vmess[:150] + trojan[:150] + ss[:150]
+    # Создаем общий огромный микс всего
+    mix = vless_list[:200] + vmess_list[:50] + trojan_list[:50] + ss_list[:50]
     with open("whitelist_subscription.txt", "w", encoding="utf-8") as f: f.write("\n".join(mix))
     
-    print(f"Сортировка завершена! Всего VLESS: {len(vless)}, VMess: {len(vmess)}, Trojan: {len(trojan)}, SS: {len(ss)}")
+    print(f"Сортировка завершена! Найдено уникальных: VLESS: {len(vless_list)}, VMess: {len(vmess_list)}, Trojan: {len(trojan_list)}, SS: {len(ss_list)}")
 
 if __name__ == "__main__":
-    fetch_and_sort()
+    fetch_igareck_configs()
