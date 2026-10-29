@@ -2,33 +2,47 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *'
-  workflow_dispatch:
+    - cron: '0 */5 * * *' # Каждые 5 часов
+  workflow_dispatch: # Кнопка ручного запуска
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-
-    - name: Install dependencies
-      run: pip install requests
-
-    - name: Run python sorter
-      run: python update_bypass.py
-
-    - name: Save changes
+    - name: Сбор и подготовка файлов подписок
       run: |
-        git config --local user.email "actions@github.com"
-        git config --local user.name "GitHub Action"
-        git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Финальная Python сортировка по протоколам" || echo "Нет изменений"
-        git push
+        mkdir public
+        echo "" > temp_raw.txt
+
+        # Скачиваем мировые базы данных прокси
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+
+        # Очищаем скрытые символы переноса строк Windows
+        tr -d '\r' < temp_raw.txt > temp_all.txt
+
+        # Раскладываем ключи по файлам в папку публикации
+        grep 'vless://' temp_all.txt | sort -u > public/vless.txt || echo "" > public/vless.txt
+        grep 'vmess://' temp_all.txt | sort -u > public/vmess.txt || echo "" > public/vmess.txt
+        grep 'trojan://' temp_all.txt | sort -u > public/trojan.txt || echo "" > public/trojan.txt
+        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u > public/shadowsocks.txt || echo "" > public/shadowsocks.txt
+        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > public/whitelist_subscription.txt
+
+        rm temp_raw.txt temp_all.txt
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './public'
+
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
