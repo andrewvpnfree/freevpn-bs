@@ -1,0 +1,2 @@
+vless://b6028681-30de-4ffb-be5c-d326f6eb8b11@104.21.57.11:443?encryption=none&security=tls&type=ws&host=speedtest.net#Резерв-Bypass-1
+vless://ca238711-21de-4fab-ae4c-c326f6eb8b22@172.67.182.12:443?encryption=none&security=tls&type=ws&host=vk.com#Резерв-Bypass-2
