@@ -14,54 +14,24 @@ jobs:
     - name: Шаг 1. Проверка вашего репозитория
       uses: actions/checkout@v4
 
-    - name: База 1 (VLESS Белые Списки)
+    - name: Шаг 2. Внутреннее скачивание стабильной базы
       uses: actions/checkout@v4
       with:
         repository: 'zieng2/wl'
-        path: 'repo1'
+        path: 'source_repo'
 
-    - name: База 2 (Мировой Микс)
-      uses: actions/checkout@v4
-      with:
-        repository: 'v2rayposhtiban/V2rayX'
-        path: 'repo2'
-
-    - name: База 3 (Трояны и Вмесс)
-      uses: actions/checkout@v4
-      with:
-        repository: 'tbbatbb/Proxy'
-        path: 'repo3'
-
-    - name: База 4 (Cloudflare Обходы)
-      uses: actions/checkout@v4
-      with:
-        repository: 'stayorgo/vless'
-        path: 'repo4'
-
-    - name: База 5 (Свежие Прокси 24/7)
-      uses: actions/checkout@v4
-      with:
-        repository: 'erfanmhd/v2ray-cloudflare-vpn'
-        path: 'repo5'
-
-    - name: База 6 (Дополнительный Сборщик)
-      uses: actions/checkout@v4
-      with:
-        repository: 'mxsir/v2ray-worker-sub'
-        path: 'repo6'
-
-    - name: Шаг 4. Настройка Python
+    - name: Шаг 3. Настройка Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Шаг 5. Запуск мега-распределителя
+    - name: Шаг 4. Запуск умного мега-парсерa
       run: python update_bypass.py
 
-    - name: Шаг 6. Сохранение результатов в файлы
+    - name: Шаг 5. Сохранение результатов в файлы
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Сбор сотен уникальных серверов из 6 баз" || echo "Нет изменений"
+        git commit -m "Автообновление из множества источников через Python" || echo "Нет изменений"
         git push origin main
