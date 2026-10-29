@@ -9,12 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Разрешаем запись файлов
     steps:
     - name: Шаг 1. Проверка репозитория
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }} # Дает скрипту полные права администратора на запись
 
     - name: Шаг 2. Настройка Python
       uses: actions/setup-python@v5
@@ -25,11 +23,9 @@ jobs:
       run: python update_bypass.py
 
     - name: Шаг 4. Сохранение результатов в файлы
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Принудительное автообновление подписок через токен" || echo "Нет изменений"
-        git push "https://x-access-token:${GITHUB_TOKEN}@://github.com{{ github.repository }}.git" main
+        git commit -m "Автообновление подписок через стандартный пуш" || echo "Нет изменений"
+        git push origin main
