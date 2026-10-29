@@ -16,7 +16,7 @@ jobs:
 
     - name: Прямое скачивание свежих VLESS конфигураций
       run: |
-        curl -sL "https://githubusercontent.com" > whitelist_subscription.txt
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt" > whitelist_subscription.txt
 
     - name: Сохранение изменений в репозиторий
       run: |
