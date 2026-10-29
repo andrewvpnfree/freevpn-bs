@@ -9,23 +9,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Разрешаем запись файлов
+      contents: write
     steps:
-    - name: Шаг 1. Проверка репозитория
+    - name: Шаг 1. Проверка вашего репозитория
       uses: actions/checkout@v4
 
-    - name: Шаг 2. Настройка Python
+    - name: Шаг 2. Внутреннее скачивание базы без интернета
+      uses: actions/checkout@v4
+      with:
+        repository: 'zieng2/wl'
+        path: 'source_repo'
+
+    - name: Шаг 3. Настройка Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Шаг 3. Запуск умного парсера
+    - name: Шаг 4. Запуск Python сортировщика
       run: python update_bypass.py
 
-    - name: Шаг 4. Сохранение результатов в файлы
+    - name: Шаг 5. Сохранение результатов в файлы
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Автообновление подписок через стандартный пуш" || echo "Нет изменений"
+        git commit -m "Автообновление через внутреннюю сеть GitHub" || echo "Нет изменений"
         git push origin main
