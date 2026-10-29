@@ -2,7 +2,7 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Автозапуск каждые 5 часов
+    - cron: '0 */5 * * *' # Каждые 5 часов
   workflow_dispatch: # Кнопка ручного запуска
 
 jobs:
@@ -14,24 +14,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Сбор тысяч ключей из всех мировых баз
+    - name: Сбор и сортировка ключей по протоколам
       run: |
-        # Создаем пустой временный файл
+        # Создаем временный файл для сбора всего мусора
         echo "" > temp_all.txt
 
-        # 1. База VLESS для обхода белых списков
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
-        
-        # 2. Огромный микс-агрегатор (VLESS, VMess, Trojan, Shadowsocks)
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
-        
-        # 3. Мировые базы прокси от разработчиков обходов
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt
+        # Скачиваем мировые базы данных прокси
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
 
-        # Очищаем список: убираем пустые строки, оставляем только протоколы обхода и удаляем дубликаты
+        # Сортируем ключи по отдельным файлам подписок (убираем дубликаты)
+        grep -E '^vless://' temp_all.txt | sort -u > vless.txt || echo "" > vless.txt
+        grep -E '^vmess://' temp_all.txt | sort -u > vmess.txt || echo "" > vmess.txt
+        grep -E '^trojan://' temp_all.txt | sort -u > trojan.txt || echo "" > trojan.txt
+        grep -E '^(shadowsocks|ss)://' temp_all.txt | sort -u > shadowsocks.txt || echo "" > shadowsocks.txt
+
+        # Создаем общий микс-файл (как было раньше)
         grep -E '^(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > whitelist_subscription.txt
         
         # Удаляем временный файл
@@ -41,6 +43,6 @@ jobs:
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
-        git add whitelist_subscription.txt
-        git commit -m "Сбор сотен уникальных ключей и подписок" || echo "Нет изменений"
+        git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
+        git commit -m "Сортировка протоколов по отдельным файлам" || echo "Нет изменений"
         git push
