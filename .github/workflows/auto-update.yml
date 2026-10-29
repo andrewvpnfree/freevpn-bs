@@ -16,33 +16,36 @@ jobs:
 
     - name: Сбор и сортировка ключей по протоколам
       run: |
-        # Создаем временный файл для сбора всего мусора
-        echo "" > temp_all.txt
+        # Создаем временный файл
+        echo "" > temp_raw.txt
 
         # Скачиваем мировые базы данных прокси
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_all.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
 
-        # Сортируем ключи по отдельным файлам подписок (убираем дубликаты)
-        grep -E '^vless://' temp_all.txt | sort -u > vless.txt || echo "" > vless.txt
-        grep -E '^vmess://' temp_all.txt | sort -u > vmess.txt || echo "" > vmess.txt
-        grep -E '^trojan://' temp_all.txt | sort -u > trojan.txt || echo "" > trojan.txt
-        grep -E '^(shadowsocks|ss)://' temp_all.txt | sort -u > shadowsocks.txt || echo "" > shadowsocks.txt
+        # Очищаем скрытые символы переноса строк Windows (CRLF -> LF)
+        tr -d '\r' < temp_raw.txt > temp_all.txt
 
-        # Создаем общий микс-файл (как было раньше)
-        grep -E '^(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > whitelist_subscription.txt
+        # Сортируем ключи по отдельным файлам подписок (ищем без жесткой привязки к началу строки ^)
+        grep 'vless://' temp_all.txt | sort -u > vless.txt || echo "" > vless.txt
+        grep 'vmess://' temp_all.txt | sort -u > vmess.txt || echo "" > vmess.txt
+        grep 'trojan://' temp_all.txt | sort -u > trojan.txt || echo "" > trojan.txt
+        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u > shadowsocks.txt || echo "" > shadowsocks.txt
+
+        # Создаем общий микс-файл
+        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > whitelist_subscription.txt
         
-        # Удаляем временный файл
-        rm temp_all.txt
+        # Удаляем временные файлы
+        rm temp_raw.txt temp_all.txt
 
     - name: Сохранение изменений в репозиторий
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Сортировка протоколов по отдельным файлам" || echo "Нет изменений"
+        git commit -m "Исправление фильтрации и сортировка по файлам" || echo "Нет изменений"
         git push
