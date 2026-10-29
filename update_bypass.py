@@ -1,59 +1,36 @@
-import urllib.request
 import re
+import os
 
-def fetch_configs():
-    # Проверенные временем текстовые базы
-    sources = [
-        "https://githubusercontent.com",
-        "https://githubusercontent.com",
-        "https://githubusercontent.com",
-        "https://githubusercontent.com"
-    ]
-    
-    # Полная маскировка под домашний браузер Chrome на Windows 11
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
-    }
-    
-    valid_configs = []
-    
-    for url in sources:
-        try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as response:
-                html = response.read().decode('utf-8', errors='ignore')
-                # Ищем любые упоминания протоколов обхода
-                links = re.findall(r'((?:vless|vmess|trojan|ss|shadowsocks)://[^\s]+)', html)
-                for link in links:
-                    if link not in valid_configs:
-                        valid_configs.append(link)
-        except Exception as e:
-            print(f"Пропущен источник {url} из-за защиты: {e}")
-            
-    return valid_configs
-
-def save_by_protocols(configs):
-    # ЗАЩИТА: Если базы выдали пустоту из-за блокировок, МЫ НЕ ЗАТИРАЕМ файлы нулями!
-    if len(configs) < 5:
-        print("Внимание! Базы заблокировали запрос. Отмена перезаписи во избежание 0 байт.")
-        return False
+def sort_local_configs():
+    # Проверяем, скачался ли внутренний файл базы
+    file_path = "source_repo/vless_universal.txt"
+    if not os.path.exists(file_path):
+        print("Ошибка: Внутренняя база не найдена!")
+        return
         
-    vless = [c for c in configs if c.startswith("vless://")]
-    vmess = [c for c in configs if c.startswith("vmess://")]
-    trojan = [c for c in configs if c.startswith("trojan://")]
-    ss = [c for c in configs if c.startswith("ss://") or c.startswith("shadowsocks://")]
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+        
+    # Очищаем скрытые символы Windows
+    content = content.replace('\r', '')
     
+    # Ищем все ссылки протоколов
+    vless = list(set(re.findall(r'(vless://[^\s]+)', content)))
+    vmess = list(set(re.findall(r'(vmess://[^\s]+)', content)))
+    trojan = list(set(re.findall(r'(trojan://[^\s]+)', content)))
+    ss = list(set(re.findall(r'((?:ss|shadowsocks)://[^\s]+)', content)))
+    
+    # Записываем в файлы репозитория
     with open("vless.txt", "w", encoding="utf-8") as f: f.write("\n".join(vless[:200]))
     with open("vmess.txt", "w", encoding="utf-8") as f: f.write("\n".join(vmess[:100]))
     with open("trojan.txt", "w", encoding="utf-8") as f: f.write("\n".join(trojan[:100]))
     with open("shadowsocks.txt", "w", encoding="utf-8") as f: f.write("\n".join(ss[:100]))
-    with open("whitelist_subscription.txt", "w", encoding="utf-8") as f: f.write("\n".join(configs[:300]))
     
-    print(f"Успешно сохранено уникальных ключей: {len(configs)}")
-    return True
+    # Общий микс
+    mix = vless[:100] + vmess[:50] + trojan[:50] + ss[:50]
+    with open("whitelist_subscription.txt", "w", encoding="utf-8") as f: f.write("\n".join(mix))
+    
+    print(f"Сортировка завершена! Найдено VLESS: {len(vless)}")
 
 if __name__ == "__main__":
-    all_keys = fetch_configs()
-    save_by_protocols(all_keys)
+    sort_local_configs()
