@@ -11,27 +11,34 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Checkout code
+    - name: Шаг 1. Проверка вашего репозитория
       uses: actions/checkout@v4
 
-    - name: Сбор баз через зеркало-обходчик
-      run: |
-        # Скачиваем через специальный шлюз, который не банит GitHub
-        curl -sSL -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" "https://banyun.uk" > raw_all.txt
+    - name: Шаг 2. Внутреннее скачивание базы прокси
+      uses: actions/checkout@v4
+      with:
+        repository: 'zieng2/wl' # Качаем напрямую из репозитория GitHub без curl
+        path: 'source_repo'
 
-        # Раскидываем ключи напрямую в файлы репозитория
+    - name: Шаг 3. Сортировка и запись ключей в файлы
+      run: |
+        # Переносим данные из скачанного репозитория в ваш файл
+        cat source_repo/vless_universal.txt > raw_all.txt
+
+        # Раскидываем ключи напрямую в файлы вашего репозитория
         grep 'vless://' raw_all.txt | sort -u | head -n 150 > vless.txt || echo "" > vless.txt
         grep 'vmess://' raw_all.txt | sort -u | head -n 100 > vmess.txt || echo "" > vmess.txt
         grep 'trojan://' raw_all.txt | sort -u | head -n 100 > trojan.txt || echo "" > trojan.txt
         grep -E '(shadowsocks|ss)://' raw_all.txt | sort -u | head -n 100 > shadowsocks.txt || echo "" > shadowsocks.txt
         grep -E '(vless|vmess|shadowsocks|ss|trojan)://' raw_all.txt | sort -u | head -n 150 > whitelist_subscription.txt
 
-        rm raw_all.txt
+        # Чистим временные папки
+        rm -rf source_repo raw_all.txt
 
-    - name: Принудительный Push в репозиторий
+    - name: Шаг 4. Принудительное сохранение файлов
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Финальный жесткий пуш рабочих ключей" || echo "Нет изменений"
+        git commit -m "Автообновление файлов внутренней сети" || echo "Нет изменений"
         git push origin main
