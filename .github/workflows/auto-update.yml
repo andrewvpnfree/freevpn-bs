@@ -14,24 +14,30 @@ jobs:
     - name: Шаг 1. Проверка вашего репозитория
       uses: actions/checkout@v4
 
-    - name: Шаг 2. Внутреннее скачивание стабильной базы
+    - name: Шаг 2. Внутреннее скачивание базы igareck
+      uses: actions/checkout@v4
+      with:
+        repository: 'igareck/vpn-configs-for-russia'
+        path: 'igareck_repo'
+
+    - name: Шаг 3. Внутреннее скачивание базы zieng2
       uses: actions/checkout@v4
       with:
         repository: 'zieng2/wl'
-        path: 'source_repo'
+        path: 'zieng_repo'
 
-    - name: Шаг 3. Настройка Python
+    - name: Шаг 4. Настройка Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: Шаг 4. Запуск умного мега-парсерa
+    - name: Шаг 5. Запуск распределителя подписок
       run: python update_bypass.py
 
-    - name: Шаг 5. Сохранение результатов в файлы
+    - name: Шаг 6. Сохранение результатов в файлы
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Автообновление из множества источников через Python" || echo "Нет изменений"
+        git commit -m "Автосбор подписок на основе базы igareck" || echo "Нет изменений"
         git push origin main
