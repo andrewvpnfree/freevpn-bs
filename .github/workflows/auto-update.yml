@@ -2,8 +2,8 @@ name: Auto Update Whitelist Bypass
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Каждые 5 часов
-  workflow_dispatch: # Кнопка ручного запуска
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,38 +14,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Сбор и сортировка ключей по протоколам
-      run: |
-        # Создаем временный файл
-        echo "" > temp_raw.txt
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-        # Скачиваем мировые базы данных прокси
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
-        curl -sSL -H "User-Agent: Mozilla/5.0" "https://githubusercontent.com" >> temp_raw.txt || true
+    - name: Install dependencies
+      run: pip install requests
 
-        # Очищаем скрытые символы переноса строк Windows (CRLF -> LF)
-        tr -d '\r' < temp_raw.txt > temp_all.txt
+    - name: Run python sorter
+      run: python update_bypass.py
 
-        # Сортируем ключи по отдельным файлам подписок (ищем без жесткой привязки к началу строки ^)
-        grep 'vless://' temp_all.txt | sort -u > vless.txt || echo "" > vless.txt
-        grep 'vmess://' temp_all.txt | sort -u > vmess.txt || echo "" > vmess.txt
-        grep 'trojan://' temp_all.txt | sort -u > trojan.txt || echo "" > trojan.txt
-        grep -E '(shadowsocks|ss)://' temp_all.txt | sort -u > shadowsocks.txt || echo "" > shadowsocks.txt
-
-        # Создаем общий микс-файл
-        grep -E '(vless|vmess|shadowsocks|ss|trojan)://' temp_all.txt | sort -u > whitelist_subscription.txt
-        
-        # Удаляем временные файлы
-        rm temp_raw.txt temp_all.txt
-
-    - name: Сохранение изменений в репозиторий
+    - name: Save changes
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
         git add vless.txt vmess.txt trojan.txt shadowsocks.txt whitelist_subscription.txt
-        git commit -m "Исправление фильтрации и сортировка по файлам" || echo "Нет изменений"
+        git commit -m "Финальная Python сортировка по протоколам" || echo "Нет изменений"
         git push
