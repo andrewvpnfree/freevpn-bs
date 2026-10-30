@@ -1,0 +1,35 @@
+name: Update VPN Configs Every 5 Hours
+
+on:
+  schedule:
+    # Запуск каждые 5 часов (в 0 минут выбранного часа)
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
+    # Оставляет возможность запустить обновление вручную в любое время
+
+permissions:
+  contents: write
+
+jobs:
+  download-configs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+
+      - name: Download VLESS configs
+        run: |
+          curl -L -s -o vless_configs.txt "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-1.txt"
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vless_configs.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Автоматическое обновление конфигураций VLESS (черный список)"
+            git push
+          else
+            echo "Изменений нет, пуш не требуется."
+          fi
