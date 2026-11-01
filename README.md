@@ -10,6 +10,9 @@
 зеркало на белых списков 2 подписка (https://translated.turbopages.org/proxy_u/en-ru.ru.27cbbb6a-6ae7964e-c5fe9588-74722d776562/https/raw.githubusercontent.com/andrewvpnfree/freevpn-bs/refs/heads/main/vless_configs.txt)
 
 
+репазиторий при белых списков (https://translated.turbopages.org/proxy_u/en-ru.ru.9a0893f1-6ae79774-f840f21e-74722d776562/https/github.com/andrewvpnfree/freevpn-bs)
+
+
 подписки обновляются каждые 5 часов
 
 улучшил впн
