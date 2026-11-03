@@ -11,6 +11,8 @@
 
 новая подписка 4 (https://raw.githubusercontent.com/andrewvpnfree/freebs/refs/heads/main/extracted_keys.txt)
 
+новая подписка 5 (https://raw.githubusercontent.com/andrewvpnfree/isobs/refs/heads/main/extracted_keys.txt)
+
 подписки обновляются каждые 5 часов
 
 улучшил впн
