@@ -12,6 +12,8 @@
 
 репазиторий при белых списков (https://translated.turbopages.org/proxy_u/en-ru.ru.9a0893f1-6ae79774-f840f21e-74722d776562/https/github.com/andrewvpnfree/freevpn-bs)
 
+новая подписка 2 (https://raw.githubusercontent.com/andrewvpnfree/new-bs/refs/heads/main/vless_configs.txt)
+
 
 подписки обновляются каждые 5 часов
 
