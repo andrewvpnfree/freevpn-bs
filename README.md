@@ -14,6 +14,8 @@
 
 новая подписка 2 (https://raw.githubusercontent.com/andrewvpnfree/new-bs/refs/heads/main/vless_configs.txt)
 
+новая подписка 3 (https://raw.githubusercontent.com/andrewvpnfree/vpnofbs/refs/heads/main/vless_configs.txt)
+
 
 подписки обновляются каждые 5 часов
 
