@@ -13,6 +13,8 @@
 
 новая подписка 5 (https://raw.githubusercontent.com/andrewvpnfree/isobs/refs/heads/main/extracted_keys.txt)
 
+новая подписка 6 (https://raw.githubusercontent.com/andrewvpnfree/bsnow/refs/heads/main/extracted_keys.txt)
+
 подписки обновляются каждые 5 часов
 
 улучшил впн
