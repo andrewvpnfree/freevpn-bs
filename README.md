@@ -19,7 +19,7 @@
 
 подписки обновляются каждые 5 часов
 
-зеркало 3 (https://raw.githack.com/andrewvpnfree/freebs/refs/heads/main/extracted_keys.txt)
+зеркало 4 (https://raw.githack.com/andrewvpnfree/freebs/refs/heads/main/extracted_keys.txt)
 
 улучшил впн
 
